@@ -57,13 +57,19 @@ graph TD
 
 本系统采用 C/S 架构，需要先启动后台服务，再运行客户端。
 
+编译包：
+```bash
+g++ -O3 -mavx2 -fopenmp -fPIC -shared fast_fill.cpp -o libfastfill.so
+```
+
 ### 步骤 1: 启动后台资源调度与进程池
 
-打开一个终端窗口（Terminal A），运行 `ProcessManager.py`。这会启动一个调度器和配置数量的 Worker 进程。
+打开一个终端窗口（Terminal A），开启大页，运行 `ProcessManager.py`。这会启动一个调度器和配置数量的 Worker 进程。
 
 ```bash
 # Terminal A
-python ProcessManager.py
+mount -o remount,huge=always /dev/shm
+numactl --interleave=all python ProcessManager.py
 
 ```
 
@@ -84,7 +90,7 @@ python ProcessManager.py
 
 ```bash
 # Terminal B
-python main.py
+numactl --interleave=all python main.py
 
 ```
 

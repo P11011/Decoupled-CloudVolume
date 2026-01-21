@@ -1,7 +1,8 @@
-from ClientProxy import ClientProxy, AutoReleaseArray
+from ClientProxy import ClientProxy
 import traceback
 import time, random
-LOCAL_CLONE = '/CX/neuro_tracking/xinr/cloudvolume_test/Cloudvolume_replay'
+import numpy as np
+LOCAL_CLONE = '/CX/neuro_tracking/xinr/cloudvolume_test/Cloudvolume'
 import os
 import sys
 if os.path.exists(LOCAL_CLONE):
@@ -17,29 +18,45 @@ def main():
             mip=0,
             fill_missing=True,
             cache=True,
-            log_path="/dev/shm/222.log",            # 开启磁盘缓存
-            lru_bytes= 80* 1024**2, 
-            partial_decompress_parallel=20
+            parallel=True,
+            log_path="/dev/shm/111.log",            # 开启磁盘缓存
+            # lru_bytes= 80* 1024**2, 
+            # partial_decompress_parallel=1
         )
     client = ClientProxy("tcp://127.0.0.1:5555", cv)
     center = [26676, 8024, 3811]
-    size = [1000, 1000, 10]
+    size = [10000,1000, 10]
     base = [0, 0, 0]
     count = 10
-    
+
     # 模拟切片调用
     try:
         while count:
-            # base = [random.randint(-1000,1000), random.randint(-1000,1000), random.randint(-1000,1000)]
+            # base = [random.randint(-10000,10000), random.randint(-1000,1000), random.randint(-1000,1000)]
             count = count - 1
             # 这一行会：申请内存 -> 发请求 -> 阻塞等待 -> 返回自动回收数组
+            # time_start = time.perf_counter()
+            # vol_data = client[center[0] + base[0] : center[0] + base[0] + size[0], center[1] + base[1]: center[1] + base[1] + size[1], center[2] + base[2]: center[2] + base[2] + size[2]]
+            
+            # client_time_cost = time.perf_counter() - time_start
+            # print(f"client_time_cost={client_time_cost},")
+            # print(f"Got data shape: {vol_data.shape}")
+            # print(f"Data at [0,0,0]: {vol_data[0,0,0]}")
+
+            time_start = time.perf_counter()
+            cv_data =  cv[center[0] + base[0] : center[0] + base[0] + size[0], center[1] + base[1]: center[1] + base[1] + size[1], center[2] + base[2]: center[2] + base[2] + size[2]]
+            cv_datatime_cost = time.perf_counter() - time_start
+
             time_start = time.perf_counter()
             vol_data = client[center[0] + base[0] : center[0] + base[0] + size[0], center[1] + base[1]: center[1] + base[1] + size[1], center[2] + base[2]: center[2] + base[2] + size[2]]
             
-            print(f"time_cost = {time.perf_counter() - time_start}")
-            print(f"Got data shape: {vol_data.shape}")
-            print(f"Data at [0,0,0]: {vol_data[0,0,0]}")
+            client_time_cost = time.perf_counter() - time_start
+            # print(f"cv_dataGot data shape: {cv_data.shape}")
+            # print(f"cv_dataData at [0,0,0]: {cv_data[0,0,0]}")
+            if np.any(cv_data != vol_data):
+                print("nono!!!!!!")
 
+            print(f"client_time_cost={client_time_cost}, cv_datatime_cost={cv_datatime_cost}")
     except Exception as e:
         traceback.print_exc()
         print(f"Error: {e}")
