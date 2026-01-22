@@ -53,6 +53,7 @@ class ClientProxy:
 
     def __init__(self, scheduler_addr, vol):
         self.cv = vol
+        self.cv.cache_thread = 0
         self.client_id = f"{os.getpid()}_client_{uuid.uuid4().hex[:8]}"
         self.meta_dtype = np.dtype(vol.meta.data_type)
         self.background_color = vol.background_color
@@ -74,12 +75,13 @@ class ClientProxy:
         time_0 = time.perf_counter()
         bbox = Bbox.from_slices(slices)
         shape = list(bbox.size3()) + [ self.num_channels ]
-        req_size_bytes = int(np.prod(shape) * self.meta_dtype.itemsize)
+        req_size = int(np.prod(shape))
+        req_size_bytes = int(req_size * self.meta_dtype.itemsize)
 
         if np.prod(shape) == 0:
             raise ValueError(f"Requested empty shape: {shape}")
 
-        if req_size_bytes < self.SHM_THRESHOLD:
+        if req_size < self.SHM_THRESHOLD:
             return self.cv[bbox]
         
         shm_name = self._init_shared_buffer_raw(req_size_bytes)

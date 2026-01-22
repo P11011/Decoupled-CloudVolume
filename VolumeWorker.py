@@ -7,7 +7,7 @@ import sys
 import ctypes
 import time
 from multiprocessing import shared_memory
-from utils import _fast_fill, enable_huge_pages
+from utils import _fast_fill
 
 LOCAL_CLONE = '/CX/neuro_tracking/xinr/cloudvolume_test/Cloudvolume'
 if os.path.exists(LOCAL_CLONE):
@@ -29,9 +29,9 @@ class VolumeWorker:
             log_path="/dev/shm/222.log",
             cache=True,
             lru_bytes=80 * 1024**2, 
-            # partial_decompress_parallel=parallel 
+            partial_decompress_parallel=parallel 
         )
-        
+        self.cv.cache_thread = 0
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.identity = self.worker_id
