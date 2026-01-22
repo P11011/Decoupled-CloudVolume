@@ -48,8 +48,8 @@ class AutoReleaseArray(np.ndarray):
 # 客户端代理 (Client Proxy)
 # =============================================================================
 class ClientProxy:
-    # 设定申请共享内存的阈值 (例如 1MB)，小于此值可能不走 SHM (本例为了代码一致性仍走 SHM，但预留逻辑)
-    SHM_THRESHOLD = 100*100*100
+    # 大于此的请求走云
+    SHM_THRESHOLD = 100*100*1000
 
     def __init__(self, scheduler_addr, vol):
         self.cv = vol
@@ -86,22 +86,19 @@ class ClientProxy:
         
         time_1 = time.perf_counter()
         try:
-            # 2. 发送请求 (包含 background_color，由 Worker 填充)
             req_id = f"{os.getpid()}_req_{uuid.uuid4().hex[:8]}"
             self._send_request(req_id, bbox, shm_name, shape, req_size_bytes)
             
-            # 3. 等待响应
             self._wait_response(req_id)
             time_2 = time.perf_counter()
             
-            # 4. 构造返回对象
             result_arr = AutoReleaseArray(
                 shape=shape,
                 dtype=self.meta_dtype,
                 shm_name=shm_name,
                 order=self.order
             )
-            print(f"Shm Request time:{(time_1-time_0)*1000}ms, _wait_response:{(time_2-time_1)*1000}ms, AutoReleaseArray construct:{(time.perf_counter()-time_2)*1000}ms")
+            # print(f"Shm Request time:{(time_1-time_0)*1000}ms, _wait_response:{(time_2-time_1)*1000}ms, AutoReleaseArray construct:{(time.perf_counter()-time_2)*1000}ms")
             return result_arr
 
         except Exception as e:
@@ -109,12 +106,10 @@ class ClientProxy:
             raise e
 
     def _init_shared_buffer_raw(self, nbytes):
-        """
-        仅申请内存，不进行任何填充操作 (O(1) 时间)
-        """
+
         unique_name = f"{os.getpid()}_shm_{uuid.uuid4().hex}"
-        shm = shared_memory.SharedMemory(create=True, size=int(nbytes), name=unique_name)
-        shm.close() # 关闭句柄，但不 unlink
+        # shm = shared_memory.SharedMemory(create=True, size=int(nbytes), name=unique_name)
+        # shm.close() # 关闭句柄，但不 unlink
         return unique_name
 
     def _send_request(self, req_id, bbox, shm_name, shape, size_bytes):
@@ -129,12 +124,12 @@ class ClientProxy:
             "dtype": str(self.meta_dtype),
             "shm_name": shm_name,
             "order": self.order,
-            "data_size": int(size_bytes), # 告知调度器数据量大小
-            "bg_color": self.background_color # 告知 Worker 背景色
+            "data_size": int(size_bytes),
+            "bg_color": self.background_color
         }
         self.socket.send(msgpack.packb(payload))
 
-    def _wait_response(self, req_id, timeout_ms=10000):
+    def _wait_response(self, req_id, timeout_ms= 1000 * 1000):
         start_time = time.time()
         while True:
             socks = dict(self.poller.poll(timeout_ms))

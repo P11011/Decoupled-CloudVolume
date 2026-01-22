@@ -24,13 +24,11 @@ class ProcessManager:
         print("=== Starting CloudVolume Cluster ===")
         print(f"Config Plan: {config_list}")
         
-        # 1. 启动 Scheduler
         p_sched = multiprocessing.Process(target=self.start_scheduler, name="Scheduler")
         p_sched.start()
         self.procs.append(p_sched)
         time.sleep(1) # 等待 Scheduler bind 端口
         
-        # 2. 启动 Workers
         worker_idx = 0  # 全局 Worker 编号计数器
 
         for p_level, count in config_list:
@@ -62,7 +60,6 @@ class ProcessManager:
         signal.signal(signal.SIGTERM, self.graceful_shutdown)
         
         while True:
-            # 简单的健康检查
             dead_procs = [p for p in self.procs if not p.is_alive()]
             if dead_procs:
                 print(f"Warning: {len(dead_procs)} processes died!")
@@ -80,7 +77,7 @@ if __name__ == "__main__":
         # - 启动 4 个 parallel=4 的进程 (适合处理小块请求，轻量级)
         # - 启动 2 个 parallel=20 的进程 (适合处理大块请求，利用多核解压)
         my_config = [
-            [12, 90],   # A=4, B=4
+            [20, 60],   # A=4, B=4
         ]
         
         manager.start_cluster(my_config)

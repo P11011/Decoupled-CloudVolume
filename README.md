@@ -69,7 +69,7 @@ g++ -O3 -mavx2 -fopenmp -fPIC -shared fast_fill.cpp -o libfastfill.so
 ```bash
 # Terminal A
 mount -o remount,huge=always /dev/shm
-numactl --interleave=all python ProcessManager.py
+python ProcessManager.py
 
 ```
 

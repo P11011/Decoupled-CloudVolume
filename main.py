@@ -18,7 +18,7 @@ def main():
             mip=0,
             fill_missing=True,
             cache=True,
-            parallel=True,
+            # parallel=True,
             log_path="/dev/shm/111.log",            # 开启磁盘缓存
             # lru_bytes= 80* 1024**2, 
             # partial_decompress_parallel=1
@@ -53,8 +53,8 @@ def main():
             client_time_cost = time.perf_counter() - time_start
             # print(f"cv_dataGot data shape: {cv_data.shape}")
             # print(f"cv_dataData at [0,0,0]: {cv_data[0,0,0]}")
-            if np.any(cv_data != vol_data):
-                print("nono!!!!!!")
+            # if np.any(cv_data != vol_data):
+            #     print("nono!!!!!!")
 
             print(f"client_time_cost={client_time_cost}, cv_datatime_cost={cv_datatime_cost}")
     except Exception as e:
