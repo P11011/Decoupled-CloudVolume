@@ -29,9 +29,9 @@ class VolumeWorker:
             log_path="/dev/shm/222.log",
             cache=True,
             lru_bytes=80 * 1024**2, 
-            partial_decompress_parallel=parallel 
         )
         self.cv.cache_thread = 0
+        self.cv.partial_decompress_parallel = parallel
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.identity = self.worker_id

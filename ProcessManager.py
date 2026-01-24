@@ -77,9 +77,7 @@ if __name__ == "__main__":
         # - 启动 4 个 parallel=4 的进程 (适合处理小块请求，轻量级)
         # - 启动 2 个 parallel=20 的进程 (适合处理大块请求，利用多核解压)
         my_config = [
-            [2, 30],
-            [4, 30],
-            [6, 30]
+            [8, 90],
         ]
         
         manager.start_cluster(my_config)

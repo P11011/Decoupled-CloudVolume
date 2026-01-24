@@ -49,11 +49,12 @@ class AutoReleaseArray(np.ndarray):
 # =============================================================================
 class ClientProxy:
     # 大于此的请求走云
-    SHM_THRESHOLD = 100*100*1000
+    SHM_THRESHOLD = 2000*2000*2000
 
     def __init__(self, scheduler_addr, vol):
         self.cv = vol
         self.cv.cache_thread = 0
+        self.cv.partial_decompress_parallel = 1
         self.client_id = f"{os.getpid()}_client_{uuid.uuid4().hex[:8]}"
         self.meta_dtype = np.dtype(vol.meta.data_type)
         self.background_color = vol.background_color
